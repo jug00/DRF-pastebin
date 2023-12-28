@@ -1,0 +1,39 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/code
+    command: python /code/manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      - db
+      - rabbitmq
+      - celery
+
+  db:
+    image: postgres:latest
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - "POSTGRES_HOST_AUTH_METHOD=trust"
+
+  rabbitmq:
+    image: "rabbitmq:management"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  celery_worker:
+    build: .
+    command: celery -A pastebin worker -l info
+    depends_on:
+      - rabbitmq
+      - web
+
+  celery_flowe:
+    build: .
+    command: celery -A pastebin flower
+
+volumes:
+  postgres_data:
