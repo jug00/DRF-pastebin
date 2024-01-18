@@ -23,4 +23,3 @@ class LoginSerializer(_LoginSerializer):
 class EmailConfirmSerializer(serializers.Serializer):
     key = serializers.CharField(read_only=True)
     url = serializers.URLField(read_only=True)
-

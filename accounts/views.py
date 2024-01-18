@@ -7,10 +7,7 @@ from rest_framework.status import HTTP_200_OK
 
 class ConfirmEmailView(APIView):
     def get(self, request, key, format=None):
-        serializer = EmailConfirmSerializer(instance={"key": key, "url": reverse_lazy("rest_verify_email", request=request)})
+        serializer = EmailConfirmSerializer(
+            instance={"key": key, "url": reverse_lazy("rest_verify_email", request=request)}
+        )
         return Response(serializer.data, status=HTTP_200_OK)
-
-
-
-
-

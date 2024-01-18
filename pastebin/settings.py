@@ -1,31 +1,29 @@
 from pathlib import Path
 from datetime import timedelta
 from environs import Env
+import redis
 
 from django.urls import reverse_lazy
 
+# Конфигурация подключения к Redis
+REDIS_HOST = 'redis'
+REDIS_PORT = 6379
+redis_instance = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)
 
+# Инициализация окружения
 env = Env()
 env.read_env()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Базовая директория проекта
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
+# Настройки безопасности и отладки
 SECRET_KEY = "django-insecure-0#!!pgr%7qa0hj*_8bb#m+h&abl*m_siw$)79e0lhog3*i2heq"
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 ALLOWED_HOSTS = []
 
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -45,16 +43,19 @@ INSTALLED_APPS = [
     "dj_rest_auth",
     'dj_rest_auth.registration',
     "drf_spectacular",
+    "debug_toolbar",
     # Local
     "snippets",
     "accounts"
 ]
 
+# Промежуточные слои (middleware)
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -63,6 +64,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "pastebin.urls"
 
+# Настройки шаблонов
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -79,20 +81,17 @@ TEMPLATES = [
     },
 ]
 
+# WSGI-приложение
 WSGI_APPLICATION = "pastebin.wsgi.application"
 
 
 # Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
     "default": env.dj_db_url("DATABASE_URL", default="postgres://postgres@db/postgres")
 }
 
-
 # Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -108,30 +107,19 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
-
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
 STATIC_URL = "static/"
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
+# Настройки REST framework
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -142,10 +130,11 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
-SITE_ID = 1
 
+# Настройки электронной почты
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+# Настройки Simple JWT
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
@@ -153,6 +142,15 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
+# Настройки кэша
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://redis:6379",
+    }
+}
+
+# Настройки REST_AUTH
 REST_AUTH = {
     'USE_JWT': True,
     'USER_DETAILS_SERIALIZER': 'accounts.serializers.UserSerializer',
@@ -163,18 +161,32 @@ REST_AUTH = {
     "OLD_PASSWORD_FIELD_ENABLED": True,
 }
 
-
+# Настройки allauth
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = "optional"
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_CHANGE_EMAIL = True
+ACCOUNT_ADAPTER = 'accounts.adapter.AccountAdapter'
 LOGIN_URL = reverse_lazy('rest_login')
+SITE_ID = 1
 
-AUTH_USER_MODEL = "accounts.CustomUser"
+# Настройки пользователя
+AUTH_USER_MODEL = "accounts.User"
 
+# Настройки для drf-spectacular
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Pasta API',
     'DESCRIPTION': 'Project for educational purposes',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+}
+
+# Настройки Celery для асинхронных задач
+CELERY_BROKER_URL = 'amqp://guest:guest@rabbitmq:5672//'
+
+
+# Настройки для отладочной панели
+INTERNAL_IPS = ['127.0.0.1',]
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK": lambda request: True,
 }

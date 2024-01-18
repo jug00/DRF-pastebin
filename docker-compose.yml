@@ -1,17 +1,21 @@
+version: '3.9'
+
 services:
   web:
+    restart: unless-stopped
     build: .
     ports:
       - "8000:8000"
     volumes:
       - .:/code
-    command: python /code/manage.py runserver 0.0.0.0:8000"
+    command: python /code/manage.py runserver 0.0.0.0:8000
     depends_on:
       - db
       - rabbitmq
       - celery
 
   db:
+    restart: unless-stopped
     image: postgres:latest
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -19,21 +23,34 @@ services:
       - "POSTGRES_HOST_AUTH_METHOD=trust"
 
   rabbitmq:
+    restart: unless-stopped
     image: "rabbitmq:management"
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
 
-  celery_worker:
+  celery:
+    restart: unless-stopped
     build: .
-    command: celery -A pastebin worker -l info
+    volumes:
+      - .:/code
+    ports:
+      - "5555:5555"
+    command: bash -c "celery -A pastebin worker -l info & celery -A pastebin beat -l info & celery -A pastebin flower"
     depends_on:
       - rabbitmq
-      - web
 
-  celery_flowe:
-    build: .
-    command: celery -A pastebin flower
+  redis:
+    restart: unless-stopped
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
 
 volumes:
   postgres_data:
+  rabbitmq_data:
+  redis_data:

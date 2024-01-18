@@ -4,6 +4,7 @@ from pygments.styles import get_all_styles
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters.html import HtmlFormatter
 from pygments import highlight
+import uuid
 from django.contrib.auth import get_user_model
 
 
@@ -13,6 +14,7 @@ STYLES_CHOICES = sorted([(item, item) for item in get_all_styles()])
 
 
 class Snippet(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=100, blank=True, default="")
     code = models.TextField()
@@ -21,6 +23,7 @@ class Snippet(models.Model):
     style = models.CharField(choices=STYLES_CHOICES, default="friendly", max_length=100)
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="snippets")
     highlighted = models.TextField()
+    views = models.IntegerField(default=0)
 
     class Meta:
         ordering = ["-created"]
@@ -32,5 +35,3 @@ class Snippet(models.Model):
         formatter = HtmlFormatter(style=self.style, linenos=linenos, full=True, **options)
         self.highlighted = highlight(self.code, lexer, formatter)
         super().save(*args, **kwargs)
-
-
