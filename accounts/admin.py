@@ -5,9 +5,12 @@ from .forms import CustomUserChangeForm, CustomUserCreationForm
 from django.utils.translation import gettext_lazy as _
 
 
+# Кастомный класс администратора для модели User, наследующийся от UserAdmin
 class CustomUserAdmin(UserAdmin):
     model = User
+    # Отображаемые поля в списке пользователей в административной панели
     list_display = ("username", "email", "is_staff")
+    # Настройки полей, отображаемых при просмотре пользователя
     fieldsets = (
         (None, {"fields": ("username", "email", "password")}),
         (
@@ -24,6 +27,7 @@ class CustomUserAdmin(UserAdmin):
         ),
         (_("Important dates"), {"fields": ("last_login", "date_joined")}),
     )
+    # Настройки полей, отображаемых при создании пользователя
     add_fieldsets = [
         (
             None,
@@ -33,9 +37,12 @@ class CustomUserAdmin(UserAdmin):
             },
         ),
     ]
+    # Поля, по которым можно осуществлять поиск в административной панели
     search_fields = ("username", "email")
+    # Используемые формы для изменения и создания пользователя
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
 
 
+# Регистрация модели User с кастомным классом администратора
 admin.site.register(User, CustomUserAdmin)

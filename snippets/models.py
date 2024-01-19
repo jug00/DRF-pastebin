@@ -8,11 +8,13 @@ import uuid
 from django.contrib.auth import get_user_model
 
 
+# Получение всех доступных лексеров и стилей Pygments
 LEXERS = [item for item in get_all_lexers() if item[1]]
 LANGUAGES_CHOICES = sorted([(item[1][0], item[0]) for item in LEXERS])
 STYLES_CHOICES = sorted([(item, item) for item in get_all_styles()])
 
 
+# Модель для представления кодовых сниппетов
 class Snippet(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateTimeField(auto_now_add=True)
@@ -28,10 +30,11 @@ class Snippet(models.Model):
     class Meta:
         ordering = ["-created"]
 
+    # Сохраняем подсвеченный код вместе с исходным кодом
     def save(self, *args, **kwargs):
         lexer = get_lexer_by_name(self.language)
         linenos = "table" if self.linenos else False
-        options = {'title': self.title} if self.title else {}
+        options = {"title": self.title} if self.title else {}
         formatter = HtmlFormatter(style=self.style, linenos=linenos, full=True, **options)
         self.highlighted = highlight(self.code, lexer, formatter)
         super().save(*args, **kwargs)

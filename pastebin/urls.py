@@ -5,10 +5,15 @@ import debug_toolbar
 
 
 urlpatterns = [
+    # Административная панель Django
     path("admin/", admin.site.urls),
+    # Включение URL-маршрутов из приложения "snippets"
     path("api/", include("snippets.urls")),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    # Swagger UI для просмотра схемы API
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path("api/auth/", include('accounts.urls')),
-    path('__debug__/', include(debug_toolbar.urls)),
+    # URL-маршруты для аутентификации в API
+    path("api/auth/", include("accounts.urls")),
+    # URL-маршруты для панели отладки Django Debug Toolbar
+    path("__debug__/", include(debug_toolbar.urls)),
 ]
